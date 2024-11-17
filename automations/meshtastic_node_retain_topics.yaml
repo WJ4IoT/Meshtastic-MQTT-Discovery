@@ -1,0 +1,60 @@
+alias: Meshtastic Node - retain topics
+description: Update Meshtastic node when corresponding MQTT messages are seen.
+trigger:
+  - platform: mqtt
+    topic: <incoming_mqtt_topic>
+    value_template: |
+      {% if value_json.payload.voltage is defined and
+                        value_json.type == "telemetry" %}on{% endif %}
+    payload: "on"
+    id: telemetry
+  - platform: mqtt
+    topic: <incoming_mqtt_topic>
+    value_template: |
+      {% if value_json.payload.voltage is not defined and
+                        value_json.type == "telemetry" %}on{% endif %}
+    payload: "on"
+    id: sensor
+  - platform: mqtt
+    topic: <incoming_mqtt_topic>
+    value_template: |
+      {% if value_json.type == "nodeinfo" %}on{% endif %}
+    payload: "on"
+    id: nodeinfo
+  - platform: mqtt
+    topic: <incoming_mqtt_topic>
+    value_template: |
+      {% if value_json.type == "position" %}on{% endif %}
+    payload: "on"
+    id: position
+  - platform: mqtt
+    topic: <incoming_mqtt_topic>
+    value_template: >
+      {% value_json.type == "text" %}on{%
+      endif %}
+    payload: "on"
+    id: text
+condition: []
+action:
+  - action: script.meshtastic_node_extract_node_id
+    metadata: {}
+    data:
+      value: "{{ trigger.payload_json }}"
+    response_variable: result
+  - action: mqtt.publish
+    metadata: {}
+    data:
+      topic: meshtastic/{{ result.value }}/{{trigger.id}}
+      payload: "{{ trigger.payload }}"
+      qos: 0
+      retain: true
+    enabled: true
+  - action: mqtt.publish
+    metadata: {}
+    data:
+      topic: meshtastic/{{ result.value }}/all
+      payload: "{{ trigger.payload }}"
+      qos: 0
+      retain: true
+    enabled: true
+mode: single
