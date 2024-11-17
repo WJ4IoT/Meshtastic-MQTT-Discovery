@@ -1,0 +1,8 @@
+alias: Meshtastic Node extract node_id
+variables:
+  result:
+    value: "{{ value.from }}"
+sequence:
+  - stop: End
+    response_variable: result
+description: ""
