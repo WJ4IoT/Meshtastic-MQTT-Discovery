@@ -1,50 +1,55 @@
 alias: Meshtastic Node - retain topics
-description: Update Meshtastic node when corresponding MQTT messages are seen.
+description: ""
 trigger:
   - platform: mqtt
-    topic: <incoming_mqtt_topic>
+    topic: msh/pa8f/2500-2599/2/json/LongFast/!433c9f4c
     value_template: |
-      {% if value_json.payload.voltage is defined and
-                        value_json.type == "telemetry" %}on{% endif %}
+      {% if value_json.type == "position" %}on{% endif %}
     payload: "on"
-    id: telemetry
+    id: position
+    enabled: true
   - platform: mqtt
-    topic: <incoming_mqtt_topic>
+    topic: msh/pa8f/2500-2599/2/json/LongFast/!433c9f4c
     value_template: |
-      {% if value_json.payload.voltage is not defined and
-                        value_json.type == "telemetry" %}on{% endif %}
+      {% if value_json.type == "telemetry" and 
+            value_json.payload.air_util_tx is defined %}on{% endif %}
     payload: "on"
-    id: sensor
+    id: device_metrics
   - platform: mqtt
-    topic: <incoming_mqtt_topic>
+    topic: msh/pa8f/2500-2599/2/json/LongFast/!433c9f4c
+    value_template: |
+      {% if value_json.type == "telemetry" and 
+            value_json.payload.barometric_pressure is defined %}on{% endif %}
+    payload: "on"
+    id: environment_metrics
+  - platform: mqtt
+    topic: msh/pa8f/2500-2599/2/json/LongFast/!433c9f4c
+    value_template: |
+      {% if value_json.type == "telemetry" and 
+            value_json.payload.current_ch1 is defined %}on{% endif %}
+    payload: "on"
+    id: power_metrics
+  - platform: mqtt
+    topic: msh/pa8f/2500-2599/2/json/LongFast/!433c9f4c
     value_template: |
       {% if value_json.type == "nodeinfo" %}on{% endif %}
     payload: "on"
     id: nodeinfo
   - platform: mqtt
-    topic: <incoming_mqtt_topic>
+    topic: msh/pa8f/2500-2599/2/json/LongFast/!433c9f4c
     value_template: |
-      {% if value_json.type == "position" %}on{% endif %}
-    payload: "on"
-    id: position
-  - platform: mqtt
-    topic: <incoming_mqtt_topic>
-    value_template: >
-      {% value_json.type == "text" %}on{%
-      endif %}
+      {% if value_json.type == "text" %}on{% endif %}
     payload: "on"
     id: text
+    enabled: true
 condition: []
 action:
-  - action: script.meshtastic_node_extract_node_id
-    metadata: {}
-    data:
-      value: "{{ trigger.payload_json }}"
-    response_variable: result
+  - variables:
+      nodeid: "{{ (trigger.payload | from_json).from }}"
   - action: mqtt.publish
     metadata: {}
     data:
-      topic: meshtastic/{{ result.value }}/{{trigger.id}}
+      topic: meshtastic/{{ nodeid }}/{{trigger.id}}
       payload: "{{ trigger.payload }}"
       qos: 0
       retain: true
@@ -52,7 +57,7 @@ action:
   - action: mqtt.publish
     metadata: {}
     data:
-      topic: meshtastic/{{ result.value }}/all
+      topic: meshtastic/{{ nodeid }}/all
       payload: "{{ trigger.payload }}"
       qos: 0
       retain: true
