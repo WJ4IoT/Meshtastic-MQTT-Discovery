@@ -1,0 +1,317 @@
+alias: Meshtastic Node mac4 MQTT Discovery
+description: Creates a HA Device from Meshtastic
+sequence:
+  - variables:
+      replace_all_mac4: not in use so manual
+      replace_all_nodeid: not in use so manual
+      device: update with your device details
+      discover: set true for what is valid for your device
+      discover_Battery: true
+      discover_Signal: true
+      discover_Utilisation: true
+      discover_GPS: true
+      discover_BMP: false
+      discover_Bullshit: false
+  - action: mqtt.publish
+    data:
+      topic: homeassistant/sensor/msh-nodeid/lastseen/config
+      retain: true
+      payload: |-
+        {
+          "name": "Last Seen",
+          "unique_id": "last_seen_mac4",
+          "state_topic": "meshtastic/nodeid/all",
+          "icon": "mdi:clock-time-eight-outline",
+          "entity_category": "diagnostic",
+          "value_template": {% raw %}"{{ (value_json.timestamp)|timestamp_custom('%-d %b %-H:%M', true) }}"{% endraw %},
+          "device": 
+          {
+              "identifiers": ["mac4"],
+              "name": "Meshtastic Node mac4",
+              "model": "T114",
+              "manufacturer": "Heltec",
+              "sw_version": "2.5.9.936260f",
+              "hw": "2.0",
+              "sn": "nodeid"
+          }
+        }
+      qos: "0"
+  - action: mqtt.publish
+    data:
+      topic: homeassistant/sensor/msh-nodeid/uptime/config
+      retain: true
+      payload: |-
+        {
+          "name": "Days Up",
+          "unique_id": "uptime_mac4",
+          "state_topic": "meshtastic/nodeid/device_metrics",
+          "icon": "mdi:clock-time-eight-outline",
+          "entity_category": "diagnostic",
+          "value_template": {% raw %}"{{ ( value_json.payload.uptime_seconds / (24*60*60)) |  float | round(3) }}"{% endraw %},
+          "device": 
+          {
+              "identifiers": ["mac4"]
+          }
+        }
+      qos: "0"
+  - if:
+      - condition: template
+        value_template: "{{ discover_Signal == True }}"
+    then:
+      - action: mqtt.publish
+        data:
+          topic: homeassistant/sensor/msh-nodeid/rssi/config
+          retain: true
+          payload: |-
+            {
+              "name": "RSSI",
+              "unique_id": "rssi_mac4",
+              "state_topic": "meshtastic/nodeid/all",
+              "state_class": "measurement",
+              "icon": "mdi:broadcast",
+              "entity_category": "diagnostic",
+              "value_template": {% raw %}"{{ value_json.rssi }}"{% endraw %},
+              "device": 
+              {
+                  "identifiers": ["mac4"]
+              }
+            }
+          qos: "0"
+      - action: mqtt.publish
+        data:
+          topic: homeassistant/sensor/msh-nodeid/snr/config
+          retain: true
+          payload: |-
+            {
+              "name": "SNR",
+              "unique_id": "snr_mac4",
+              "state_topic": "meshtastic/nodeid/all",
+              "state_class": "measurement",
+              "icon": "mdi:broadcast",
+              "entity_category": "diagnostic",
+              "value_template": {% raw %}"{{ value_json.snr }}"{% endraw %},
+              "device": 
+              {
+                  "identifiers": ["mac4"]
+              }
+            }
+          qos: "0"
+  - if:
+      - condition: template
+        value_template: "{{ discover_Battery == True }}"
+    then:
+      - action: mqtt.publish
+        data:
+          topic: homeassistant/sensor/msh-nodeid/batterylevel/config
+          retain: true
+          payload: |-
+            {
+              "name": "Battery Level",
+              "unique_id": "battery_level_mac4",
+              "state_topic": "meshtastic/nodeid/device_metrics",
+              "device_class": "battery",
+              "unit_of_measurement": "%",
+              "entity_category": "diagnostic",
+              "value_template": {% raw %}"{{ value_json.payload.battery_level }}"{% endraw %},
+              "device": 
+              {
+                  "identifiers": ["mac4"]
+              }
+            }
+          qos: "0"
+      - action: mqtt.publish
+        data:
+          topic: homeassistant/sensor/msh-nodeid/batteryvoltage/config
+          retain: true
+          payload: |-
+            {
+              "name": "Battery Voltage",
+              "unique_id": "battery_voltage_mac4",
+              "state_topic": "meshtastic/nodeid/device_metrics",
+              "value_template": {% raw %}"{{ (value_json.payload.voltage | float) | round(2) }}"{% endraw %},
+              "unit_of_measurement": "V",
+              "icon": "mdi:current-dc",
+              "entity_category": "diagnostic",
+              "device": 
+              {
+                  "identifiers": ["mac4"]
+
+              }
+            }
+          qos: "0"
+  - if:
+      - condition: template
+        value_template: "{{ discover_Utilisation == True }}"
+    then:
+      - action: mqtt.publish
+        data:
+          topic: homeassistant/sensor/msh-nodeid/chanutil/config
+          retain: true
+          payload: |-
+            {
+              "name": "Channel Utilization",
+              "unique_id": "channel_utilization_mac4",
+              "state_topic": "meshtastic/nodeid/device_metrics",
+              "state_class": "measurement",
+              "unit_of_measurement": "%",
+              "icon": "mdi:broadcast",
+              "entity_category": "diagnostic",
+              "value_template": {% raw %}"{{ (value_json.payload.channel_utilization | float) | round(2) }}"{% endraw %},
+              "device": 
+              {
+                  "identifiers": ["mac4"]
+              }
+            }
+          qos: "0"
+      - action: mqtt.publish
+        data:
+          topic: homeassistant/sensor/msh-nodeid/airutil/config
+          retain: true
+          payload: |-
+            {
+              "name": "Air Utilization",
+              "unique_id": "air_utilization_mac4",
+              "state_topic": "meshtastic/nodeid/device_metrics",
+              "state_class": "measurement",
+              "icon": "mdi:broadcast",
+              "unit_of_measurement": "%",
+              "entity_category": "diagnostic",
+              "value_template": {% raw %}"{{ (value_json.payload.air_util_tx | float) | round(2) }}"{% endraw %},
+              "device": 
+              {
+                  "identifiers": ["mac4"]
+              }
+            }
+          qos: "0"
+  - if:
+      - condition: template
+        value_template: "{{ discover_BMP == True }}"
+    then:
+      - action: mqtt.publish
+        data:
+          topic: homeassistant/sensor/msh-nodeid/humidity/config
+          retain: true
+          payload: |-
+            {
+              "name": "Humidity",
+              "unique_id": "humidity_mac4",
+              "state_topic": "meshtastic/nodeid/environment_metrics",
+              "device_class": "humidity",
+              "unit_of_measurement": "%",
+              "value_template": {% raw %}"{{ (value_json.payload.relative_humidity | float) | round(1) }}"{% endraw %},
+              "device": 
+              {
+                  "identifiers": ["mac4"]
+              }
+            }
+          qos: "0"
+      - action: mqtt.publish
+        data:
+          topic: homeassistant/sensor/msh-nodeid/pressure/config
+          retain: true
+          payload: |-
+            {
+              "name": "Pressure",
+              "unique_id": "pressure_mac4",
+              "state_topic": "meshtastic/nodeid/environment_metrics",
+              "device_class": "Pressure",
+              "unit_of_measurement": "hPa",
+              "value_template": {% raw %}"{{ (value_json.payload.barometric_pressure | float) | round(1) }}"{% endraw %},
+              "device": 
+              {
+                  "identifiers": ["mac4"]
+              }
+            }
+          qos: "0"
+      - action: mqtt.publish
+        data:
+          topic: homeassistant/sensor/msh-nodeid/temperature/config
+          retain: true
+          payload: |-
+            {
+              "name": "Temperature",
+              "unique_id": "temperature_mac4",
+              "state_topic": "meshtastic/nodeid/environment_metrics",
+              "device_class": "temperature",
+              "unit_of_measurement": "°C",
+              "value_template": {% raw %}"{{ (value_json.payload.temperature | float) | round(1) }}"{% endraw %},
+              "device": 
+              {
+                  "identifiers": ["mac4"]
+              }
+            }
+          qos: "0"
+  - if:
+      - condition: template
+        value_template: "{{ discover_Bullshit == True }}"
+    then:
+      - action: mqtt.publish
+        data:
+          topic: homeassistant/sensor/msh-nodeid/callsign/config
+          retain: true
+          payload: |-
+            {
+              "name": "Call Sign",
+              "unique_id": "callsign_mac4",
+              "state_topic": "meshtastic/nodeid/nodeinfo",
+              "icon": "mdi:information-box-outline",
+              "entity_category": "diagnostic",
+              "value_template": {% raw %}"{{ value_json.payload.shortname }}"{% endraw %},
+              "device": 
+              {
+                  "identifiers": ["mac4"]
+              }
+            }
+          qos: "0"
+      - action: mqtt.publish
+        data:
+          topic: homeassistant/sensor/msh-nodeid/node/config
+          retain: true
+          payload: |-
+            {
+              "name": "Node",
+              "unique_id": "node_mac4",
+              "state_topic": "meshtastic/nodeid/all",
+              "icon": "mdi:information-box-outline",
+              "entity_category": "diagnostic",
+              "value_template": {% raw %}"{{ value_json.from }}"{% endraw %},
+              "enable": "0",
+              "device": 
+              {
+                  "identifiers": ["mac4"]
+              }
+            }
+          qos: "0"
+      - action: mqtt.publish
+        data:
+          topic: homeassistant/sensor/msh-nodeid/user/config
+          retain: true
+          payload: |-
+            {
+              "name": "User",
+              "unique_id": "user_mac4",
+              "state_topic": "meshtastic/nodeid/nodeinfo",
+              "icon": "mdi:information-box-outline",
+              "entity_category": "diagnostic",
+              "value_template": {% raw %}"{{ value_json.payload.id }}"{% endraw %},
+              "device": 
+              {
+                  "identifiers": ["mac4"]
+              }
+            }
+          qos: "0"
+  - if:
+      - condition: template
+        value_template: "{{ discover_GPS == True }}"
+    then:
+      - action: mqtt.publish
+        data:
+          topic: homeassistant/device_tracker/msh-nodeid/config
+          retain: true
+          payload: |-
+            {
+              "json_attributes_topic": "meshtastic/nodeid/gps",
+              "name": "Meshtastic Node mac4"
+            }
+          qos: "0"
+mode: single
