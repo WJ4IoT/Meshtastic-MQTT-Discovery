@@ -1,0 +1,92 @@
+alias: Meshtastic Node - retain topics
+description: Retain the incomming Meshtastic Topic with extra topic levels FROM and TYPE
+triggers:
+  - topic: msh/pa8f/<zip_code_range>/2/json/LongFast/<your_mqtt_node>
+    value_template: |
+      {% if value_json.type == "position" %}on{% endif %}
+    payload: "on"
+    id: position
+    enabled: true
+    trigger: mqtt
+  - topic: msh/pa8f/<zip_code_range>/2/json/LongFast/<your_mqtt_node>
+    value_template: |
+      {% if value_json.type == "telemetry" and 
+            value_json.payload.air_util_tx is defined %}on{% endif %}
+    payload: "on"
+    id: device_metrics
+    trigger: mqtt
+  - topic: msh/pa8f/<zip_code_range>/2/json/LongFast/<your_mqtt_node>
+    value_template: |
+      {% if value_json.type == "telemetry" and 
+            value_json.payload.barometric_pressure is defined %}on{% endif %}
+    payload: "on"
+    id: environment_metrics
+    trigger: mqtt
+  - topic: msh/pa8f/<zip_code_range>/2/json/LongFast/<your_mqtt_node>
+    value_template: |
+      {% if value_json.type == "telemetry" and 
+            value_json.payload.current_ch1 is defined %}on{% endif %}
+    payload: "on"
+    id: power_metrics
+    trigger: mqtt
+  - topic: msh/pa8f/<zip_code_range>/2/json/LongFast/<your_mqtt_node>
+    value_template: |
+      {% if value_json.type == "nodeinfo" %}on{% endif %}
+    payload: "on"
+    id: nodeinfo
+    trigger: mqtt
+  - topic: msh/pa8f/<zip_code_range>/2/json/LongFast/<your_mqtt_node>
+    value_template: |
+      {% if value_json.type == "" %}on{% endif %}
+    payload: "on"
+    id: error
+    trigger: mqtt
+  - topic: msh/pa8f/<zip_code_range>/2/json/LongFast/<your_mqtt_node>
+    value_template: |
+      {% if value_json.type == "text" %}on{% endif %}
+    payload: "on"
+    id: text
+    enabled: true
+    trigger: mqtt
+conditions: []
+actions:
+  - variables:
+      from: "{{ (trigger.payload | from_json).from }}"
+  - action: mqtt.publish
+    metadata: {}
+    data:
+      topic: meshtastic/{{ from }}/{{trigger.id}}
+      payload: "{{ trigger.payload }}"
+      qos: 0
+      retain: true
+    enabled: true
+  - action: mqtt.publish
+    metadata: {}
+    data:
+      topic: meshtastic/{{ from }}/all
+      payload: "{{ trigger.payload }}"
+      qos: 0
+      retain: true
+    enabled: true
+  - if:
+      - condition: trigger
+        id:
+          - position
+    then:
+      - variables:
+          lat: >-
+            {{ ((trigger.payload | from_json).payload.latitude_i / 10000000) |
+            round(5) }}
+          lon: >-
+            {{ ((trigger.payload | from_json).payload.longitude_i / 10000000) |
+            round(5) }}
+      - action: mqtt.publish
+        metadata: {}
+        data:
+          topic: meshtastic/{{ from }}/gps
+          payload: "{\"latitude\":{{ lat }}, \"longitude\":{{ lon }}, \"gps_accuracy\": 0}"
+          qos: 0
+          retain: true
+        enabled: true
+mode: parallel
+max: 10
