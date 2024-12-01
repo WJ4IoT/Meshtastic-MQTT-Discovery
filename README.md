@@ -28,6 +28,8 @@ To discover each Meshtastic Node. You need to run the script "SCRIPT - Meshtasti
     </ul>
 Some changes needs to repeated so a "replace all" is better. After the updates you only need to run this script once. this will create the dicovery settings under the "homeassistant" (see MQTT-discovery entity" in previous picture).If this device or one of its sensors become obsolete you can delete this directly in MQTT-explorer.
 
+NOTE: Not every possible sensor is already included but hopefully this setup is easy enough to extend this.
+
 <h2>Template Sensor</h2
 
 You can create also an additional template sensor in Settings - Device - Helper, this sensor will calulate the distance of a node to Home with this template:
