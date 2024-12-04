@@ -33,10 +33,38 @@ NOTE: Not every possible sensor is already included but hopefully this setup is 
 <h2>Template Sensor</h2
 
 You can create also an additional template sensor in Settings - Device - Helper, this sensor will calulate the distance of a node to Home with this template:
-{{ distance('device_tracker.meshtastic_node_mac4') | round(2) }}
+{{ distance('device_tracker.meshtastic_node_mac4_tracker') | round(2) }}
 See for further required settings the picture below:
 
 <img src="template_sensor.png" width="300" />
 
-As you can see you also be able to link this sensor with the device itself (It is funny that is is not possible to link the device_tracker to the device).
+As you can see you also be able to link this sensor with the device itself.
 This action is only relevant if the node has a position and in the script "discover_GPS: true" when the script was run for this node.
+
+<h2>Change Log</h2>
+
+<ul>
+<li>20241201 - Publish first version</li>
+<li>20241201 - The Device_Tracker is now included in the Device, seems order is pretty important to be successful</li>
+</ul>
+
+<h2>Inspired by</h2>
+
+Found mostly my inspiration in the Home Assistant Forum to new a few (just a few):
+<ul>
+  <li>https://meshtastic.org/docs/software/integrations/mqtt/home-assistant/</li>
+  <li>https://community.home-assistant.io/t/creating-a-device-with-multiple-sensor-entities-via-mqtt-discovery/584372/5</li>
+  <li>https://community.home-assistant.io/t/mqtt-sensor-how-to-load-attributes/212523/6</li>
+  <li>https://community.home-assistant.io/t/split-mqtt-payload-and-send-values-to-entities/257445/4</li>
+  <li>https://community.home-assistant.io/t/convert-integer-to-hours-and-minutes/333945/2</li>
+  <li>https://community.home-assistant.io/t/passing-trigger-payload-json-to-script/278951/6</li>
+  <li>https://community.home-assistant.io/t/2023-7-responding-services/588733/258</li>
+  <li>https://community.home-assistant.io/t/example-using-response-from-a-script/599180/13</li>
+  <li>https://community.home-assistant.io/t/convert-received-hex-codes-to-usable-decimal-values/465514</li>
+  <li>https://community.home-assistant.io/t/changing-a-decimal-value-into-a-hex-value-jinja/11925/4</li>
+  <li>https://community.home-assistant.io/t/extract-substring-from-string/94592/2</li>
+  <li>https://www.home-assistant.io/integrations/input_text/</li>
+  <li>https://www.home-assistant.io/integrations/device_tracker.mqtt/</li>
+  <li>https://github.com/ESPresense/ESPresense/discussions/144</li>
+  <li>https://github.com/iantrich/config-template-card/issues/10</li>
+</ul>
