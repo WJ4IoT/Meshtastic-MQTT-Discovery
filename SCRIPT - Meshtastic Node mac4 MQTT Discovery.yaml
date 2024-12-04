@@ -310,8 +310,14 @@ sequence:
           retain: true
           payload: |-
             {
-              "json_attributes_topic": "meshtastic/nodeid/gps",
-              "name": "Meshtastic Node mac4"
+            "name": "Tracker",
+            "unique_id": "required_but_ignored",
+            "entity_category": "diagnostic",
+            "json_attributes_topic": "meshtastic/nodeid/gps",
+            "device": 
+              {
+                  "identifiers": ["mac4"]
+              }
             }
           qos: "0"
 mode: single
