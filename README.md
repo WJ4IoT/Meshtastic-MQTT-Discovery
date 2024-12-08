@@ -1,10 +1,15 @@
 # Meshtastic-MQTT-Discovery
 Home Automation Script and Automation to setup a Meshtastic Node as a Real Device in Home Assistant
 
+<h3>An Integration already exist</h2>
+Before you continue I recently found out there is already an integration available under the name "Meshtastic MQTT Client" in HACS (or nr 761792106) zie also <a href="https://github.com/kvj/hass_Mtastic_MQTT">github</a>.
+The benefit of this integration is that it does not require JSON. It is likely you wish to follow this integration.
+
+<h3>My starting Point</h2>
 When I started my objective was to see a Meshtastic Node as 1 device. After a lot of wrong intents and 'kommaneuken' I decided to abandon YAML (but I still prefer packages to keep everything of a project in 1 file) and do this directly in Home Assistant where mistake are noticed directly. This is the endresult:
 
 <img src="Meshtastic.png" width="700" />
-
+ 
 <h2>Requirement(s)</h2>
 
 There is only 1 requirement and that is that you have your <b>own</b> MQTT-broker, a semi-requirement is that inside your own broker you setup a <b>MQTT Bridge</b> to a Meshtastic MQTT broker. How to do this is beyond the scope of this documentation and is much better explained elsewhere like <a href="https://www.meshnet.nl/setup-mqtt-bridge.html">here</a> however in Dutch. <b>WARNING: publish inside your own broker and not in other mans broker !!!!!</b>. When your broker part is setup correctly you may create a new automation and copy the content of file "AUTOMATION - Meshtastic Node - retain topics.yaml" (if you prefer other textual methods you might need to change the intent etc). Before you activate you need to update the <b>TOPiC</b> lines:
@@ -45,7 +50,8 @@ This action is only relevant if the node has a position and in the script "disco
 
 <ul>
 <li>20241201 - Publish first version</li>
-<li>20241201 - The Device_Tracker is now included in the Device, seems order is pretty important to be successful</li>
+<li>20241203 - The Device_Tracker is now included in the Device, seems order is pretty important to be successful</li>
+<li>20241208 - Discovery of an existing integration</li>  
 </ul>
 
 <h2>Inspired by</h2>
