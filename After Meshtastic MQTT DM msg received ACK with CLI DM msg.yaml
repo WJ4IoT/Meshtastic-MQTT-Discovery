@@ -1,0 +1,18 @@
+alias: After Meshtastic MQTT DM msg received ACK with CLI DM msg
+description: To check if on location both sides work
+triggers:
+  - topic: msh/pa8f/2300-2799/2/json/PKI/!433abcde
+    value_template: >
+      {% if value_json.from == 1234567890 and value_json.type == "text" %}on{%
+      endif %}
+    payload: "on"
+    id: text
+    trigger: mqtt
+conditions: []
+actions:
+  - variables:
+      from: "{{ (trigger.payload | from_json).from }}"
+      sender: "{{ (trigger.payload | from_json).sender }}"
+  - action: shell_command.meshtastic_script
+    data: {}
+mode: single
