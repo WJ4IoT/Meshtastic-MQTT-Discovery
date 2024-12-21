@@ -1,0 +1,97 @@
+####################################################################
+#   @author         :   WJ4IoT
+#   @date           :   21/12/2024
+#   @package        :   meshtastic_message_reply
+#   @description    :   After Meshtastic MQTT DM msg received ACK with CLI DM msg
+####################################################################
+
+# This package is inspired from a discussion with @Karel on Telegram "t.me/meshtastic_nl"
+# For argument sake Is does not intend to be THE solution to do it this way!
+
+# REQUIREMENTS:
+# - Home Assistant
+# - own MQTT broker with bridge to desired Meshtatic MQTT server (in this example "pa8f") (see official docs)
+# - Mosquitto Broker with bridge (see official docs)
+# - working CLI Meshtastic (see official docs)
+# - Shell Command settings (included)
+# - (new) location for bash file of shell_command (choosen for location inside HA: config/shell_command
+
+# USAGE:
+# This setup is as an complete package (benefit you can include this blah blah to explain working)
+# save it to your package location. A package requires restart of HA !!!!
+
+# If you are not working with packages yet you can copy the automation to your desired locations or inside 
+# the UI. You might need to be aware of different intent.
+# The shell_command needs to go into your configuration.yaml (but I would perfer to create a package)
+
+# Pleaae note:
+# it looks like that a CLI command will fail when there is activity on the sending NODE.
+# Hence the reason to at least introduce a X seconds delay so this NODE can send the ACK.
+# However on a busy mesh that might not be retulting in action. 
+
+shell_command:
+  meshtastic_reply_fixed: /bin/bash /config/shell_command/meshtastic_msg_fixed.sh
+  meshtastic_reply: meshtastic --tcp 192.168.20.36 --sendtext "{{ states('input_text.meshtastic_reply_msg') }}" --dest "{{ states('input_text.meshtastic_reply_to') }}"
+
+# Content of file "...fixed": meshtastic --tcp 192.168.ip.ip --sendtext 'Bericht Ontvangen!' --dest '!433abcde' --ack
+# please change were appropriate
+
+input_text:
+  meshtastic_reply_msg:
+    name: Meshtastic Reply Message
+    initial: Message Received
+    min: 0
+    max: 190
+
+  meshtastic_reply_to:
+    name: Meshtastic Reply To
+    initial: "!52e0ed7d"
+    min: 0
+    max: 190
+
+# the objective of these twee input_text fields is that the shell_command becomes more flexible.
+# reducing restart of Home Assistant and can potentially be filled with data from the incomming message
+# in the automation.
+
+# Please change <zipcode>, <sender> and <from> field to appropiate values 
+automation:
+
+- id: meshtastic_dm_message_reply
+  alias: meshtastic_dm_message_reply
+  description: ""
+  triggers: []
+  conditions: []
+  actions:
+    - action: shell_command.meshtastic_reply
+      metadata: {}
+      data: {}
+    - stop: Just the end
+  mode: single
+
+- id: meshtastic_dm_message_received
+  alias: meshtastic_dm_message_received
+  description: See Text msg in MQTT
+  triggers:
+    - topic: msh/pa8f/2500-2599/2/json/PKI/!433c9f4c
+      value_template: >
+        {% if value_json.from == 1390472573 and value_json.type == "text" %}on{%
+        endif %}
+      payload: "on"
+      id: text
+      trigger: mqtt
+  conditions: []
+  actions:
+  - delay: '00:00:15'
+  - action: shell_command.meshtastic_reply_fixed
+    enabled: false
+    metadata: {}
+    data: {}
+  - action: automation.trigger
+    enabled: true
+    metadata: {}
+    target:
+      entity_id:
+        - automation.meshtastic_send_reply_message
+    data:
+      skip_condition: true
+  - stop: Just the end
