@@ -1,0 +1,99 @@
+####################################################################
+#   @author         :   WJ4IoT
+#   @date           :   21/12/2024
+#   @package        :   meshtastic_messages_sniffing.yaml
+#   @description    :   Sniffing Meshtastic Messages
+####################################################################
+
+# This package snifs for all messages picked up by a node with MQTT and if JSON was also installed
+# it is inspired from a discussion with @Karel on Telegram "t.me/meshtastic_nl"
+# For argument sake Is does not intend to be THE solution to do it this way 
+
+# REQUIREMENTS:
+# - Home Assistant
+# - own MQTT broker with bridge to desired Meshtatic MQTT server (in this example "pa8f")
+# - program MQTT-EXPLORER: i.e to remove device "homeassistant/sensor/text"
+
+# USAGE:
+# This setup is as an complete package (benefit you can include this blah blah to explain working)
+# save it to your package location. A package requires restart of HA !!!!
+
+# If you are not working with packages yet you can copy the automation and script to your desired locations or inside 
+# the UI. You might need to be aware of different intent.
+
+automation:
+
+- id: meshtastic_sniffing_messages
+  alias: Meshtastic - Sniffing Messages
+  description: Sniffing for Meshtastic Text provided this is seen by a MQTT node with JSON
+  triggers:
+    - topic: msh/pa8f/+/2/json/LongFast/#
+      value_template: |
+        {% if value_json.type == "text" %}on{% endif %}
+      payload: "on"
+      id: text
+      trigger: mqtt
+  conditions: []
+  actions:
+    - variables:
+        from: "{{trigger.payload_json.from }}"
+        from2hex: "{{ '%0x' % from | int }}"
+        mac4: "{{ from2hex[-4:] }}"
+        text: "{{ trigger.payload_json.payload.text }}"
+    - metadata: {}
+      data:
+        qos: "0"
+        retain: true
+        topic: meshtastic/latest/text
+        payload: "{{ mac4}} -> {{ text }}"
+      action: mqtt.publish
+      enabled: false
+    - metadata: {}
+      data:
+        qos: 0
+        retain: true
+        topic: meshtastic/latest
+        payload: |-
+          { 
+            "text": "{{ from2hex }} -> {{ text }}",
+            "user": "{{ from2hex }}",
+            "mac4": "{{ mac4 }}",
+            "from": "{{ from }}"
+          }
+      action: mqtt.publish
+      enabled: true
+  mode: parallel
+  max: 10
+
+script:
+  meshtastic_message_device:
+    alias: Meshtastic - Create Latest Message Device
+    description: This script only needs to be run once-off so no need to be part of an automation
+    sequence:
+      - action: mqtt.publish
+        metadata: {}
+        data:
+          qos: "0"
+          retain: true
+          topic: meshtastic/available
+          payload: online
+      - metadata: {}
+        data:
+          qos: "0"
+          retain: true
+          topic: homeassistant/sensor/meshtastic/text/config
+          payload: |-
+            {
+              "name": "Msg",
+              "unique_id": "meshtastic_latest_msg",
+              "state_topic": "meshtastic/latest",
+              "value_template": {% raw %}"{{ value_json.text }}"{% endraw %},
+              "icon": "mdi:comment-text-outline",
+              "device": 
+              {
+                "identifiers": ["meshtastic_latest"],
+                "name": "Meshtastic Latest" 
+              }
+            }
+        action: mqtt.publish
+        enabled: true
